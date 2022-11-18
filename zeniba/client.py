@@ -1,8 +1,11 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
+
 import requests
 
 import zeniba.config as config
-import zeniba.config.params as params
+from zeniba.search import Filters
+from zeniba.search import Parser as Search
+from zeniba.search import Result
 
 
 class Client:
@@ -11,6 +14,12 @@ class Client:
         self.session.cookies["remix_userkey"] = key
         self.session.cookies["remix_userid"] = uid
         self.session.proxies = config.PROXIES
+
+    def get(self, path: str, params: Optional[Dict]):
+        """Get a page"""
+
+        path = path if path.startswith("/") else f"/{path}"
+        return self.session.get(f"{config.URL}{path}", params=params or {})
 
     def search(
         self,
@@ -22,33 +31,47 @@ class Client:
         extensions: List[str] = [],
         order: str = "popuar",
     ):
-        """
-        Simple search
-        """
+        """Simple search"""
 
-        # Params
-        # - e=1 [exact match] (+ "" to the query)
-        # - yearFrom={int}
-        # - yearTo={int}
-        # - languages[]={str}
-        # - extensions[]={str}
-        # - order={str}
+        path = f"/s/{query}"
+        filters = Filters(exact, yearFrom, yearTo, languages, extensions, order)
+        return Paging(self, path, filters)
 
-        # When not in allowed lists, they fallback to defaults or are ignored.
 
-        languages_extended = [
-            params.languages_s.get(l) if params.languages_s.get(l) is not None else l
-            for l in languages
-        ]
+class Paging:
+    """Paging handler"""
 
-        payload = {}
-        payload["e"] = "1" if exact else None
-        payload["yearFrom"] = yearFrom
-        payload["yearTo"] = yearTo
-        payload["languages[]"] = languages_extended
-        payload["extensions[]"] = extensions
-        payload["order"] = order
+    def __init__(self, client: Client, path: str, filters: Optional[Filters]):
 
-        query = f'"{query}"' if exact else query
-        res = self.session.get(f"{config.URL}/s/{query}", params=payload)
-        return res
+        self.path = path
+        self.client = client
+        self.filters = filters or Filters()
+        self.pages = {}
+
+        res = client.get(self.path, self.filters.payload())
+        parser = Search(res.text)
+        page, amount = parser.paging()
+
+        self.pages[page] = parser.data()
+        self.amount = amount
+
+    def page(self, index: int) -> Result:
+        """Parse a page"""
+
+        if index not in self.pages:
+            self.filters.page = index
+            res = self.client.get(self.path, self.filters.payload())
+            self.pages[index] = Search(res.text).data()
+
+        return self.pages[index]
+
+    def all(self):
+        """Fetch data from all pages"""
+
+        partials = [self.page(i + 1) for i in range(self.amount)]
+
+        return Result(
+            items=[item for page in partials for item in page.items],
+            amount=partials[0].amount,
+            amount_exceeds=partials[0].amount_exceeds,
+        )
