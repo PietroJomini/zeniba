@@ -3,5 +3,5 @@
   <img src="docs/logo.jpg" alt="zeniba" height="236"/>
 </p>
 
-<h1 align="center">haku</h1>
+<h1 align="center">zeniba</h1>
 <p align="center"><i>"No-Face, why don't you stay with me?"</i></p>
