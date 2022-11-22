@@ -1,6 +1,6 @@
 import re
 from collections.abc import Callable
-from typing import Any, Match, Pattern, Union
+from typing import Any, List, Pattern, Union
 
 from bs4 import BeautifulSoup, Tag
 
@@ -42,7 +42,11 @@ class Parser:
     def re(self, exp: Union[Pattern, str]):
         return re.search(exp, self.src)
 
-    def field(self, key: str, field: str):
+    # TODO better error handling
+    def field(self, key: str, field: str, default: List[Any] = [""]):
         """Return a given field of a set of tags"""
 
-        return self.get(key, lambda tag: tag[field])
+        try:
+            return self.get(key, lambda tag: tag[field])
+        except KeyError:
+            return default
