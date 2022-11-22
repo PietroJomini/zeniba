@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 from zeniba.config.params import languages_s
 from zeniba.parser import Parser as P
@@ -61,7 +61,7 @@ class Result:
 class Parser(P):
     """Search result page parser"""
 
-    def paging(self) -> Tuple[int, int]:
+    def paging(self):
         """Parse paging data"""
 
         pages_match = re.search(r"pagesTotal: (\d+)", self.src)
@@ -71,7 +71,7 @@ class Parser(P):
 
         return page, pages
 
-    def data(self) -> Result:
+    def data(self):
 
         books = []
         for item in self.soup.select(".resItemBox"):

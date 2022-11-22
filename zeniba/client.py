@@ -15,7 +15,7 @@ class Client:
         self.session.cookies["remix_userid"] = uid
         self.session.proxies = config.PROXIES
 
-    def get(self, path: str, params: Optional[Dict]):
+    def get(self, path: str, params: Optional[Dict] = None):
         """Get a page"""
 
         path = path if path.startswith("/") else f"/{path}"
@@ -46,7 +46,7 @@ class Paging:
         self.path = path
         self.client = client
         self.filters = filters or Filters()
-        self.pages = {}
+        self.pages: Dict[int, Result] = {}
 
         res = client.get(self.path, self.filters.payload())
         parser = Search(res.text)
@@ -55,7 +55,7 @@ class Paging:
         self.pages[page] = parser.data()
         self.amount = amount
 
-    def page(self, index: int) -> Result:
+    def page(self, index: int):
         """Parse a page"""
 
         if index not in self.pages:
