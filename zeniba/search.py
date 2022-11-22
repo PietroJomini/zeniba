@@ -1,7 +1,9 @@
 import re
-from dataclasses import dataclass, field
+from dataclasses import InitVar, dataclass, field
+from functools import lru_cache
 from typing import List, Optional
 
+from zeniba.client import Client
 from zeniba.config.params import languages_s
 from zeniba.parser import Parser as P
 
@@ -36,8 +38,8 @@ class Filters:
 
 
 @dataclass
-class Item:
-    """Search result item"""
+class Link:
+    """Link to book"""
 
     index: int
     title: str
@@ -45,66 +47,105 @@ class Item:
     authors: List[str]
     year: str
     language: str
-    file_type: str
-    file_size: str
 
+    file: InitVar[str]  # Only used on creation to slim the parsing block
+    file_type: str = field(init=False)
+    file_size: str = field(init=False)
 
-@dataclass
-class Result:
-    """Search result page"""
-
-    items: List[Item] = field(repr=False)
-    amount: int
-    amount_exceeds: bool
+    def __post_init__(self, file: str):
+        ftype, fsize = file.split(",")
+        self.file_type = ftype.strip()
+        self.file_size = fsize.strip()
 
 
 class Parser(P):
-    """Search result page parser"""
+    """Search parser"""
 
     def paging(self):
-        """Parse paging data"""
+        """Parse paging meta"""
 
-        pages_match = re.search(r"pagesTotal: (\d+)", self.src)
-        page_match = re.search(r"pageCurrent: (\d+)", self.src)
-        pages = int(pages_match.group(1) if pages_match is not None else 1)
-        page = int(page_match.group(1) if page_match is not None else 1)
+        total_match = self.re(r"pagesTotal: (\d+)")
+        current_match = self.re(r"pageCurrent: (\d+)")
+        total = int(total_match.group(1)) if total_match is not None else 1
+        current = int(current_match.group(1)) if current_match is not None else 1
+        return total, current
 
-        return page, pages
+    def amount(self):
+        """Parse amount of links"""
+
+        label = self.text_s("li.active > .totalCounter")
+        groups = re.match(r"\((\d*)(\+)?\)", label)
+        amount = int(groups.group(1)) if groups is not None else -1
+        exceeds = groups is not None and groups.group(2) is not None
+        return amount, exceeds
 
     def data(self):
+        """Parse search data"""
 
-        books = []
-        for item in self.soup.select(".resItemBox"):
-            title = item.select_one("a[href*=book]:not(:has(img))")
-            publisher = item.select_one("a[title=Publisher]")
-            authors = item.select(".authors > a")
-            year = item.select_one(".property_year > .property_value")
-            language = item.select_one(".property_language > .property_value")
-            index = item.select_one(".counter")
-
-            file = item.select_one(".property__file > .property_value")
-            file = (file.text if file is not None else ",").split(",")
-
-            books.append(
-                Item(
-                    index=int(index.text if index is not None else -1),
-                    title=title.text if title is not None else "",
-                    publisher=publisher.text if publisher is not None else "",
-                    authors=[author.text for author in authors],
-                    year=year.text if year is not None else "",
-                    language=language.text if language is not None else "",
-                    file_type=file[0].strip(),
-                    file_size=file[1].strip(),
-                )
+        return [
+            Link(
+                index=int(item.text_s(".counter")),
+                title=item.text_s("a[href*=book]:not(:has(img))"),
+                publisher=item.text_s('a[title="Publisher"]'),
+                authors=item.text(".authors > a"),
+                year=item.property("year"),
+                language=item.property("language"),
+                file=item.text_s(".property__file > .property_value"),
             )
+            for item in self.get(".resItemBox", lambda tag: P(str(tag)))
+        ]
 
-        amount = self.soup.select_one("li.active > .totalCounter")
-        groups = re.match(r"\((\d*)(\+?)\)", amount.text if amount is not None else "")
-        amount = int(groups.group(1)) if groups is not None else -1
-        amount_e = (
-            groups is not None
-            and groups.group(2) is not None
-            and len(groups.group(2)) != 0
-        )
 
-        return Result(items=books, amount=amount, amount_exceeds=amount_e)
+class Paging:
+    """Paging handler"""
+
+    def __init__(
+        self,
+        client: Client,
+        path: str,
+        filters: Optional[Filters] = None,
+    ):
+        self.client = client
+        self.path = path
+        self.filters = filters or Filters()
+        self.total, _ = self.parser().paging()
+        self.amount, self.exceeds = self.parser().amount()
+
+    @lru_cache
+    def parser(self, index: Optional[int] = None):
+        """Retrieve indexed page and build parser"""
+
+        self.filters.page = index or self.filters.page
+        page = self.client.get(self.path, self.filters.payload())
+        return Parser(page.text)
+
+    def read(self, index: Optional[int] = None):
+        """Read content of indexed or current page"""
+
+        return self.parser(index).data()
+
+    def all(self):
+        """Read content from all pages"""
+
+        link = []
+        for index in range(self.total):
+            link += self.read(index + 1)
+
+        return link
+
+
+def search(
+    client: Client,
+    query: str,
+    exact: bool = False,
+    yearFrom: Optional[int] = None,
+    yearTo: Optional[int] = None,
+    languages: List[str] = [],
+    extensions: List[str] = [],
+    order: str = "popuar",
+):
+    """Search handler"""
+
+    path = f"/s/{query}"
+    filters = Filters(exact, yearFrom, yearTo, languages, extensions, order)
+    return Paging(client, path, filters)

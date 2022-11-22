@@ -9,9 +9,12 @@
 
 - [x] scrape book
 - [ ] download file
-- [ ] directly link a Item from a page to the book page
-- [ ] booklists
-- [ ] categories
+
+## Search
+
+- [x] search
+- [x] paging
+- [ ] link to Book page
 
 ## UI
 
@@ -22,3 +25,10 @@
 
 - [ ] error handling
 - [ ] check responses for failed ones
+- [ ] logging
+
+## features
+
+- [ ] booklists
+- [ ] categories
+- [ ] fulltext search
