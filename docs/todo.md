@@ -2,7 +2,7 @@
 
 ## Sesh
 
-- [ ] login
+- [x] login
 - [ ] save sesh somewere
 
 ## Book
