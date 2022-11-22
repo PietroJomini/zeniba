@@ -11,22 +11,6 @@
 ### Examples
 
 ```python
-
-from zeniba.client import Client
-
-client = Client(config.KEY, config.UID)
-pagination = client.search("sanderson", languages=["en", "it"], extensions=["EPUB"])
-
-page = pagination.page(1)
-meta = page.items[1]
-title = meta.title # The Mistborn Trilogy [...]
-author = meta.authors[0] # Brandon Sanderson
-publisher = meta.publisher # TOR Books
-
-everything = pagination.all()
-```
-
-```python
 from zeniba import Zeniba
 
 # API entry point.
