@@ -12,10 +12,12 @@
 
 ```python
 from zeniba import Zeniba
+from zeniba.client import login
 
 # API entry point.
 # Open a connection to z-lib over the tor proxy
-client = Zeniba(config.KEY, config.UID)
+_, _, (uid, key) = login(config.EMAIL, config.PASSWORD)
+client = Zeniba(key, uid)
 
 # Paginated search
 pagination = client.search("sanderson", languages=["en", "it"], extensions=["EPUB"])
