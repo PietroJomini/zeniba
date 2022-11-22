@@ -41,3 +41,8 @@ class Parser:
 
     def re(self, exp: Union[Pattern, str]):
         return re.search(exp, self.src)
+
+    def field(self, key: str, field: str):
+        """Return a given field of a set of tags"""
+
+        return self.get(key, lambda tag: tag[field])

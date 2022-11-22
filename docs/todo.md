@@ -14,7 +14,7 @@
 
 - [x] search
 - [x] paging
-- [ ] link to Book page
+- [x] link to Book page
 
 ## UI
 

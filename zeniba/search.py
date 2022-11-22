@@ -41,21 +41,28 @@ class Filters:
 class Link:
     """Link to book"""
 
+    zid: str
     index: int
     title: str
     publisher: str
     authors: List[str]
     year: str
     language: str
+    cover: str
 
     file: InitVar[str]  # Only used on creation to slim the parsing block
     file_type: str = field(init=False)
     file_size: str = field(init=False)
 
     def __post_init__(self, file: str):
+
+        # adjust file meta
         ftype, fsize = file.split(",")
         self.file_type = ftype.strip()
         self.file_size = fsize.strip()
+
+        # adjust zid (link -> zid)
+        self.zid = self.zid.replace("/book/", "")
 
 
 class Parser(P):
@@ -84,12 +91,14 @@ class Parser(P):
 
         return [
             Link(
+                zid=item.field("a[href*=book]:not(:has(img))", "href")[0],
                 index=int(item.text_s(".counter")),
                 title=item.text_s("a[href*=book]:not(:has(img))"),
                 publisher=item.text_s('a[title="Publisher"]'),
                 authors=item.text(".authors > a"),
                 year=item.property("year"),
                 language=item.property("language"),
+                cover=item.field("img.cover", "data-src")[0],
                 file=item.text_s(".property__file > .property_value"),
             )
             for item in self.get(".resItemBox", lambda tag: P(str(tag)))

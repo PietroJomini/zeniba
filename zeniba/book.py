@@ -6,7 +6,7 @@ from zeniba.parser import Parser
 
 
 @dataclass
-class Meta:
+class Book:
     """Book meta"""
 
     title: str
@@ -34,17 +34,17 @@ def book(client: Client, zid: str):
     page = client.get(f"/book/{zid}").text
     parser = Parser(page)
 
-    return Meta(
+    return Book(
         title=parser.text_s('h1[itemprop="name"]'),
         authors=parser.text('a[itemprop="author"]'),
-        cover=parser.get("div.z-book-cover > img", lambda tag: tag["src"])[0],
+        cover=parser.field("div.z-book-cover > img", "src")[0],
         categories=parser.property("categories"),
-        volume=parser.property("volume", mod=int),
-        year=parser.property("year", mod=int),
+        volume=parser.property("volume", mod=int, default="-1"),
+        year=parser.property("year", mod=int, default="-1"),
         edition=parser.property("edition"),
         publisher=parser.property("publisher"),
         language=parser.property("language"),
-        pages=int(parser.property("pages")),
+        pages=parser.property("pages", mod=int, default="-1"),
         isbn=parser.property(r"isbn.\31 3 + .property_isbn"),
         isbn_10=parser.property(r"isbn.\31 0"),
         isbn_13=parser.property(r"isbn.\31 3"),
