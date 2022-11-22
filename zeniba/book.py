@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from functools import cached_property
 from typing import List
 
 from zeniba.client import Client
@@ -24,33 +23,30 @@ class Meta:
     isbn_10: str
     isbn_13: str
     series: List[str]
+
+    # TODO
     # description: List[str]
 
 
-class Book:
+def book(client: Client, zid: str):
     """Book handler"""
 
-    def __init__(self, client: Client, zid: str):
-        self.page = client.get(f"/book/{zid}").text
-        self.parser = Parser(self.page)
+    page = client.get(f"/book/{zid}").text
+    parser = Parser(page)
 
-    @cached_property
-    def meta(self):
-        """Get meta"""
-
-        return Meta(
-            title=self.parser.text_s('h1[itemprop="name"]'),
-            authors=self.parser.text('a[itemprop="author"]'),
-            cover=self.parser.get("div.z-book-cover > img", lambda tag: tag["src"])[0],
-            categories=self.parser.property("categories"),
-            volume=self.parser.property("volume", mod=int),
-            year=self.parser.property("year", mod=int),
-            edition=self.parser.property("edition"),
-            publisher=self.parser.property("publisher"),
-            language=self.parser.property("language"),
-            pages=int(self.parser.property("pages")),
-            isbn=self.parser.property(r"isbn.\31 3 + .property_isbn"),
-            isbn_10=self.parser.property(r"isbn.\31 0"),
-            isbn_13=self.parser.property(r"isbn.\31 3"),
-            series=self.parser.property("series"),
-        )
+    return Meta(
+        title=parser.text_s('h1[itemprop="name"]'),
+        authors=parser.text('a[itemprop="author"]'),
+        cover=parser.get("div.z-book-cover > img", lambda tag: tag["src"])[0],
+        categories=parser.property("categories"),
+        volume=parser.property("volume", mod=int),
+        year=parser.property("year", mod=int),
+        edition=parser.property("edition"),
+        publisher=parser.property("publisher"),
+        language=parser.property("language"),
+        pages=int(parser.property("pages")),
+        isbn=parser.property(r"isbn.\31 3 + .property_isbn"),
+        isbn_10=parser.property(r"isbn.\31 0"),
+        isbn_13=parser.property(r"isbn.\31 3"),
+        series=parser.property("series"),
+    )
