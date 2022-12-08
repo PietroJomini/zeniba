@@ -8,30 +8,18 @@
 
 <br>
 
-### Examples
+### Quick example
 
 ```python
 from zeniba import Zeniba
-from zeniba.client import login
 
-# API entry point.
-# Open a connection to z-lib over the tor proxy
-_, _, (uid, key) = login(config.EMAIL, config.PASSWORD)
-client = Zeniba(key, uid)
+client = Zeniba.login(config.EMAIL, config.PASSWORD)
+links = client.search("a little life").read(0)
+book = client.book(links[0])
 
-# Paginated search
-pagination = client.search("sanderson", languages=["en", "it"], extensions=["EPUB"])
-page = pagination.read(2)
-link = page[0]
-
-# Search result item.
-# For a full list of fields see the documentation (TODO)
-link.title # Mistborn: The Final Empire
-link.publisher # Tor Teen
-link.authors # ['Brandon Sanderson'],
-
-# Book detailed page
-book = client.book(link.zid)
-book.isbn_10 # 0765377136
-book.categories # Science Fiction & Fantasy
+name, content = client.download(book)
 ```
+
+### Not so quick example
+
+[docs](https://github.com/PietroJomini/zeniba/blob/master/docs/docs.md)

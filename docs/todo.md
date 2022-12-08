@@ -10,6 +10,7 @@
 - [x] scrape book
 - [x] download file
   - [ ] more download options
+  - [ ] custom filename?
 
 ## Search
 
@@ -29,6 +30,7 @@
 - [ ] logging
 - [ ] async api
 - [x] better api entrypoint
+- [x] more detailed docs
 
 ## features
 
