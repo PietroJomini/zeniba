@@ -38,10 +38,10 @@ class Book:
         self.did = self.did.replace("/dl/", "")
 
 
-def download(client: Client, book: Book):
+def download(client: Client, did: str):
     """Book downloader"""
 
-    res = client.get(f"/dl/{book.did}")
+    res = client.get(f"/dl/{did}")
 
     # TODO check if the pattern of the header is always the same
     content_disposition = res.headers["Content-Disposition"]

@@ -28,7 +28,7 @@
 - [ ] check responses for failed ones
 - [ ] logging
 - [ ] async api
-- [ ] better api entrypoint
+- [x] better api entrypoint
 
 ## features
 
