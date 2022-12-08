@@ -67,11 +67,11 @@ pagination.exceds # boolean, True if the number of items is capped
 Zeniba support all the search filters supported by the website:
 
 | filter               | key          | type                   | default      |
-| -------------------- | ------------ | ---------------------- | ------------ | ------ |
+| -------------------- | ------------ | ---------------------- | ------------ |
 | search query         | `query`      | `str`                  | **required** |
 | match only if exact  | `exact`      | `bool`                 | `False`      |
-| year range start     | `yearFrom`   | `int                   | None`        | `None` |
-| year range end       | `yearTo`     | `int                   | None`        | `None` |
+| year range start     | `yearFrom`   | `Optional[int]`        | `None`       |
+| year range end       | `yearTo`     | `Optional[int]`        | `None`       |
 | languages            | `languages`  | `str[]`                | `[]`         |
 | file extensions      | `extensions` | `str[]`                | `[]`         |
 | result sorting order | `order`      | `config.params.orders` | `"popular"`  |
