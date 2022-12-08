@@ -3,12 +3,13 @@
 ## Sesh
 
 - [x] login
-- [ ] save sesh somewere
+- [ ] cache sesh to not get banned at login
 
 ## Book
 
 - [x] scrape book
-- [ ] download file
+- [x] download file
+  - [ ] more download options
 
 ## Search
 
@@ -26,9 +27,17 @@
 - [ ] error handling
 - [ ] check responses for failed ones
 - [ ] logging
+- [ ] async api
+- [ ] better api entrypoint
 
 ## features
 
 - [ ] booklists
 - [ ] categories
 - [ ] fulltext search
+
+## ispirations
+
+- https://github.com/sertraline/zlibrary
+- https://github.com/khanhas/zshelf
+- https://github.com/topics/zlibrary

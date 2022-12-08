@@ -9,6 +9,11 @@ from zeniba.parser import Parser
 class Book:
     """Book meta"""
 
+    # ids
+    zid: str
+    did: str
+
+    # meta
     title: str
     authors: List[str]
     cover: str
@@ -27,6 +32,25 @@ class Book:
     # TODO
     # description: List[str]
 
+    def __post_init__(self):
+
+        # adjust did (link -> did)
+        self.did = self.did.replace("/dl/", "")
+
+
+def download(client: Client, book: Book):
+    """Book downloader"""
+
+    res = client.get(f"/dl/{book.did}")
+
+    # TODO check if the pattern of the header is always the same
+    content_disposition = res.headers["Content-Disposition"]
+    filename = content_disposition.split(";filename*=")[0].replace(
+        "attachment; filename=", ""
+    )[1:-1]
+
+    return filename, res.content
+
 
 def book(client: Client, zid: str):
     """Book handler"""
@@ -35,6 +59,8 @@ def book(client: Client, zid: str):
     parser = Parser(page)
 
     return Book(
+        zid=zid,
+        did=parser.field("a.dlButton", "href")[0],
         title=parser.text_s('h1[itemprop="name"]'),
         authors=parser.text('a[itemprop="author"]'),
         cover=parser.field("div.z-book-cover > img", "src")[0],

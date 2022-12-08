@@ -44,4 +44,9 @@ class Client:
         """Get a page"""
 
         path = path if path.startswith("/") else f"/{path}"
-        return self.session.get(f"{config.URL}{path}", params=params or {})
+        return self.session.get(
+            f"{config.URL}{path}",
+            params=params or {},
+            allow_redirects=True,
+            headers=config.HEADERS,
+        )
