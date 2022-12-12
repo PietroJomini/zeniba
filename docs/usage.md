@@ -1,40 +1,15 @@
-# Zeniba docs
+# Usage
 
-## API Front-end
+**Table of contents**
 
-### Session
+- [Search](#search)
+  - [Pagination](#pagination)
+  - [Filters](#filters)
+  - [Links](#links)
+- [Book](#book)
+  - [Download](#download)
 
-With the new version of the website (see below @"TOR proxy") a session is required to surf the library. Zeniba implements a email-password login, that can be bypassed by giving directly the user `uid` and `key`.
-
-#### `login`
-
-Opening a session through a email-password login is as symple as writing a line of code:
-
-```python
-from zeniba import Zeniba
-
-client = Zeniba.login(config.EMAIL, config.PASSWORD)
-```
-
-#### `uid`-`key` bypass
-
-If for any reason providing directly the user `uid` and `key` is preferrable, doing so is as simple as
-
-```python
-from zeniba import Zeniba
-
-client = Zeniba(config.UID, config.KEY)
-```
-
-The user `uid` and `key` can be found in the cookies of the website, for example by running `document.cookie` into the browser console, which should return a string containing
-
-```
-remix_userkey=USER_KEY; remix_userid=USER_ID;
-```
-
-This method is preferrable if it is required to open a big number of clients in short period of time, since zlibrary standard login can (and will) ban your ip for a short period of time if it receives too much requests.
-
-### Search
+## Search
 
 To search books:
 
@@ -42,7 +17,7 @@ To search books:
 pagination = client.search("a little life")
 ```
 
-#### Pagination
+### Pagination
 
 The result is paginated (like the website). `.read(n: int)` fetch, parse, cache and returns the `n`-th page of books:
 
@@ -62,7 +37,7 @@ pagination.amount # number of items
 pagination.exceds # boolean, True if the number of items is capped
 ```
 
-#### Filters
+### Filters
 
 Zeniba support all the search filters supported by the website:
 
@@ -76,7 +51,7 @@ Zeniba support all the search filters supported by the website:
 | file extensions      | `extensions` | `str[]`                | `[]`         |
 | result sorting order | `order`      | `config.params.orders` | `"popular"`  |
 
-For example, to search some book ofwritten by the novelist Hanya Yanagihara in italian and french, and only in the `EPUB` format:
+For example, to search some book written by the novelist Hanya Yanagihara in italian and french, and only in the `EPUB` format:
 
 ```python
 client.search("Hanya Yanagihara", languages=["it", "fr"], extensions=["EPUB"])
@@ -84,7 +59,7 @@ client.search("Hanya Yanagihara", languages=["it", "fr"], extensions=["EPUB"])
 
 Languages can be written both in short (`"en"`) and extended (`"english"`) format and are mapped with the same map used by the official client.
 
-#### Links
+### Links
 
 The pagination returns an array of `Links`, which are containers with the shape
 
@@ -113,7 +88,7 @@ class Link:
     file_size: str
 ```
 
-### Book
+## Book
 
 Book detailed informations (the "book" dedicated page on the official client) can be fetched with
 
@@ -121,7 +96,7 @@ Book detailed informations (the "book" dedicated page on the official client) ca
 book = client.book(link)
 ```
 
-where `link` can be both a `zid` or a full `Link` returned from the search. The data is returned in a container similat to `Link`, but with more informations
+where `link` can be both a `zid` or a full `Link` returned from the search. The data is returned in a container similar to `Link`, but with more informations
 
 ```python
 class Book:
@@ -150,7 +125,7 @@ class Book:
     series: List[str]
 ```
 
-#### Download
+### Download
 
 To download a book
 
@@ -160,7 +135,7 @@ name, content = client.download(book)
 
 where `book` can be both a `Book` or a `zid` string. `name` is the original name of the file, and `content` is the `response.Content` in bytes.
 
-To save the file various methods can be used, one of meny being
+To save the file various methods can be used, one of many being
 
 ```python
 from pathlib import Path
@@ -175,29 +150,3 @@ file = Path(config.FOLDER) / name
 # save the file
 file.write_bytes(content)
 ```
-
-## Config
-
-### TOR proxy
-
-Since z-library domains have been seized by UPS, now the website is only accessible through tor. Installing / setting up the tor proxies is hence left as an exercise for the reader.
-
-The only requirement as of Zeniba is to modify them if they differ from the default ones, which are:
-
-```json
-{
-  "http": "socks5h://127.0.0.1:9150",
-  "https": "socks5h://127.0.0.1:9150"
-}
-```
-
-### Endpoints
-
-The default onion endpoints are:
-
-| key     | endpoint                                                               |
-| ------- | ---------------------------------------------------------------------- |
-| login   | http://loginzlib2vrak5zzpcocc3ouizykn6k5qecgj2tzlnab5wcbqhembyd.onion/ |
-| lybrary | http://bookszlibb74ugqojhzhg2a63w5i2atv5bqarulgczawnbmsb6s6qead.onion3 |
-
-They can be modified in `config/__init__.py`.
