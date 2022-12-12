@@ -3,7 +3,8 @@
 ## Sesh
 
 - [x] login
-- [ ] cache sesh to not get banned at login
+- [x] cache sesh to not get banned at login
+- [ ] check if keys are ok the first time we use them (if they are not fetched with `.login()`)
 
 ## Book
 
@@ -31,6 +32,7 @@
 - [ ] async api
 - [x] better api entrypoint
 - [x] more detailed docs
+  - [ ] split docs in files
 
 ## features
 

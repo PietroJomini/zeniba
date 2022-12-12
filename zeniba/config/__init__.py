@@ -4,3 +4,4 @@ PROXIES = {"http": "socks5h://127.0.0.1:9150", "https": "socks5h://127.0.0.1:915
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0"
 }
+CACHE = {"appname": "zeniba", "appauthor": "jorteip", "key": "key", "uid": "uid"}

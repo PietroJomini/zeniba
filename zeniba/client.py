@@ -4,6 +4,11 @@ from typing import Dict, List, Optional
 import requests
 
 import zeniba.config as config
+from zeniba.utils import cache
+
+
+class AuthenticationError(Exception):
+    """Failed login exception"""
 
 
 def login(email: str, password: str):
@@ -34,11 +39,58 @@ def login(email: str, password: str):
 
 
 class Client:
-    def __init__(self, key: str, uid: str):
-        self.session = requests.Session()
-        self.session.cookies["remix_userkey"] = key
-        self.session.cookies["remix_userid"] = uid
-        self.session.proxies = config.PROXIES
+    """Authenticated client"""
+
+    def __init__(
+        self,
+        uid: Optional[str] = None,
+        key: Optional[str] = None,
+    ):
+        self._session = None
+        self.cache = cache.Cache()
+
+        # TODO check if keys are valid if they are user-provided
+        self.uid = uid or self.cache.get(config.CACHE["uid"])
+        self.key = key or self.cache.get(config.CACHE["key"])
+
+    @property
+    def session(self):
+
+        if self._session is not None:
+            return self._session
+
+        if not self.is_authenticated():
+            raise AuthenticationError("Keys needed")
+
+        self._session = requests.Session()
+        self._session.cookies["remix_userkey"] = self.key
+        self._session.cookies["remix_userid"] = self.uid
+        self._session.proxies = config.PROXIES
+        return self._session
+
+    def is_authenticated(self):
+        """Check if the user is authenticated"""
+
+        return self.uid is not None and self.key is not None
+
+    def login(self, email: str, password: str, force: bool = False):
+        """Retrieve keys using email and password"""
+
+        if self.is_authenticated() and not force:
+            return self
+
+        ok, errors, (uid, key) = login(email, password)
+
+        if not ok or len(errors or []) > 0:
+            raise AuthenticationError("Failed login", errors)
+
+        self.uid = uid
+        self.key = key
+
+        self.cache.set(config.CACHE["uid"], str(uid))
+        self.cache.set(config.CACHE["key"], str(key))
+
+        return self
 
     def get(self, path: str, params: Optional[Dict] = None):
         """Get a page"""
