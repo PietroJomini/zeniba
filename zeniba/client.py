@@ -1,29 +1,20 @@
 import json
 from typing import Dict, List, Optional
 
-import requests
-
 from zeniba.config import config
 from zeniba.utils import cache
+from zeniba.session import onion, Protocol, http
 
 
 class AuthenticationError(Exception):
     """Failed login exception"""
 
 
-def login(email: str, password: str):
+def login(email: str, password: str, session: Protocol):
     """Attempt to login using user email and password"""
 
-    res = requests.post(
-        f"{config['net']['onion']['endpoints']['login']}/rpc.php",
-        data=dict(
-            email=email,
-            password=password,
-            action="login",
-            gg_json_mode="1",
-        ),
-        proxies=config["net"]["onion"]["proxies"],
-    )
+    data = dict(email=email, password=password, action="login", gg_json_mode="1")
+    res = session.post("rpc.php", data=data)
 
     content = json.loads(res.text)
 
@@ -46,7 +37,7 @@ class Client:
         uid: Optional[str] = None,
         key: Optional[str] = None,
     ):
-        self._session = None
+        self._session = onion()
         self.cache = cache.Cache()
 
         # TODO check if keys are valid if they are user-provided
@@ -56,16 +47,11 @@ class Client:
     @property
     def session(self):
 
-        if self._session is not None:
-            return self._session
-
         if not self.is_authenticated():
             raise AuthenticationError("Keys needed")
 
-        self._session = requests.Session()
-        self._session.cookies["remix_userkey"] = self.key
-        self._session.cookies["remix_userid"] = self.uid
-        self._session.proxies = config["net"]["onion"]["proxies"]
+        self._session.session.cookies["remix_userkey"] = self.key
+        self._session.session.cookies["remix_userid"] = self.uid
         return self._session
 
     def is_authenticated(self):
@@ -73,13 +59,16 @@ class Client:
 
         return self.uid is not None and self.key is not None
 
-    def login(self, email: str, password: str, force: bool = False):
+    def login(
+        self, email: str, password: str, force: bool = False, use_onion: bool = False
+    ):
         """Retrieve keys using email and password"""
 
         if self.is_authenticated() and not force:
             return self
 
-        ok, errors, (uid, key) = login(email, password)
+        login_session = onion("login") if use_onion else http("login")
+        ok, errors, (uid, key) = login(email, password, login_session)
 
         if not ok or len(errors or []) > 0:
             raise AuthenticationError("Failed login", errors)
@@ -92,13 +81,15 @@ class Client:
 
         return self
 
-    def get(self, path: str, params: Optional[Dict] = None):
+    def logout(self):
+        """Delete session keys"""
+
+        self.uid = None
+        self.key = None
+        self.cache.set(config["cache"]["uid"], None)
+        self.cache.set(config["cache"]["key"], None)
+
+    def get(self, path: str, params: Dict[str, str] | None = None):
         """Get a page"""
 
-        path = path if path.startswith("/") else f"/{path}"
-        return self.session.get(
-            f"{config['net']['onion']['endpoints']['main']}{path}",
-            params=params or {},
-            allow_redirects=True,
-            headers=config["net"]["onion"]["headers"],
-        )
+        return self.session.get(path, params)

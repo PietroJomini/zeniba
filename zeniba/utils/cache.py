@@ -39,11 +39,12 @@ class Cache:
     def get(self, key: str):
 
         self.read()
-        return self.content.get(key)
+        value = self.content.get(key)
+        return value if value != "" else None
 
-    def set(self, key: str, value: str):
+    def set(self, key: str, value: str | None):
 
-        self.content[key] = value
+        self.content[key] = value if value is not None else ""
         self.write()
 
     def clear(self):

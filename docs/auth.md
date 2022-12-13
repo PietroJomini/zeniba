@@ -4,6 +4,8 @@
 
 - [Login](#login)
 - [Cache](#cache)
+  - [Force login attempt](#force-login-attempt)
+  - [Logout](#logout)
 - [uid-key bypass](#uid-key-bypass)
 
 ## Login
@@ -17,6 +19,12 @@ client = Zeniba().login(config.EMAIL, password.EMAIL)
 ```
 
 If the client isn't logged in, it will throw a `AuthenticationError` exception.
+
+By default the login is executed on the `https` page `singlelogin.me`, which works only as a login and status page, but is (opinionatedly) significantly faster than the onion login. To force the login with onion set the `use_onion` flag:
+
+```python
+client.login(config.EMAIL, password.EMAIL, use_onion=True)
+```
 
 ## Cache
 
@@ -50,6 +58,14 @@ client.login(config.EMAIL, config.PASSWORD)
 
 # Force the attempt
 client.login(config.EMAIL, config.PASSWORD, force=True)
+```
+
+### Logout
+
+Logout means to delete any cached logins. To do such:
+
+```python
+client.logout()
 ```
 
 ## `uid`-`key` bypass
