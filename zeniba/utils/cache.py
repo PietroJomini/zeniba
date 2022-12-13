@@ -3,10 +3,10 @@ from pathlib import Path
 
 import appdirs
 
-from zeniba import config
+from zeniba.config import config
 
 DEFAULT_CACHE_PATH = appdirs.user_cache_dir(
-    config.CACHE["appname"], config.CACHE["appauthor"]
+    config["cache"]["appname"], config["cache"]["appauthor"]
 )
 
 

@@ -1,0 +1,29 @@
+
+[cache]
+key = "key"
+uid = "uid"
+appname = "zeniba"
+appauthor = "zeniba"
+
+[endpoints.https]
+login = "https://singlelogin.me/"
+
+[net]
+
+[net.onion]
+
+[net.onion.endpoints]
+main = "http://bookszlibb74ugqojhzhg2a63w5i2atv5bqarulgczawnbmsb6s6qead.onion"
+login = "http://loginzlib2vrak5zzpcocc3ouizykn6k5qecgj2tzlnab5wcbqhembyd.onion/"
+
+[net.onion.proxies]
+http = "socks5h://127.0.0.1:9150"
+https = "socks5h://127.0.0.1:9150"
+
+[net.onion.headers]
+user-agent = "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0"
+
+
+[net.http]
+[net.http.endpoints]
+login = "https://singlelogin.me/"

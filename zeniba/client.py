@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 
 import requests
 
-import zeniba.config as config
+from zeniba.config import config
 from zeniba.utils import cache
 
 
@@ -15,14 +15,14 @@ def login(email: str, password: str):
     """Attempt to login using user email and password"""
 
     res = requests.post(
-        f"{config.LOGIN_URL}/rpc.php",
+        f"{config['net']['onion']['endpoints']['login']}/rpc.php",
         data=dict(
             email=email,
             password=password,
             action="login",
             gg_json_mode="1",
         ),
-        proxies=config.PROXIES,
+        proxies=config["net"]["onion"]["proxies"],
     )
 
     content = json.loads(res.text)
@@ -50,8 +50,8 @@ class Client:
         self.cache = cache.Cache()
 
         # TODO check if keys are valid if they are user-provided
-        self.uid = uid or self.cache.get(config.CACHE["uid"])
-        self.key = key or self.cache.get(config.CACHE["key"])
+        self.uid = uid or self.cache.get(config["cache"]["uid"])
+        self.key = key or self.cache.get(config["cache"]["key"])
 
     @property
     def session(self):
@@ -65,7 +65,7 @@ class Client:
         self._session = requests.Session()
         self._session.cookies["remix_userkey"] = self.key
         self._session.cookies["remix_userid"] = self.uid
-        self._session.proxies = config.PROXIES
+        self._session.proxies = config["net"]["onion"]["proxies"]
         return self._session
 
     def is_authenticated(self):
@@ -87,8 +87,8 @@ class Client:
         self.uid = uid
         self.key = key
 
-        self.cache.set(config.CACHE["uid"], str(uid))
-        self.cache.set(config.CACHE["key"], str(key))
+        self.cache.set(config["cache"]["uid"], str(uid))
+        self.cache.set(config["cache"]["key"], str(key))
 
         return self
 
@@ -97,8 +97,8 @@ class Client:
 
         path = path if path.startswith("/") else f"/{path}"
         return self.session.get(
-            f"{config.URL}{path}",
+            f"{config['net']['onion']['endpoints']['main']}{path}",
             params=params or {},
             allow_redirects=True,
-            headers=config.HEADERS,
+            headers=config["net"]["onion"]["headers"],
         )
